@@ -3,10 +3,13 @@
 */
 #include <iostream>
 #include "chip8.h"
+#include <SDL.h>
+#include <GL/glut.h>
 
 Chip8 chip8;
 
 int main() {
-  std::cout << "hello world" << std::endl;
+
   return 0;
+
 }
