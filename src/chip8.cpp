@@ -41,14 +41,94 @@ void Chip8::emulateCycle()
 
   // get the most significant 4 bits for instruction
   switch (opcode & 0xF000) {
+    // 0 leading 4 bit
+    case 0x0000:
+      switch(opcode & 0x000F) {
+        // clears the screen
+        case 0x0000:
+          fill(begin(gfx), end(gfx), 0);
+          pc+= 2;
+          break;
+        
+        // returns from subroutine
+        case 0x000E:
+          break;
+
+      }
+    // jump to address 0x0NNN
+    case 0x1000:
+      pc= opcode & 0x0FFF;
+      break;
+    // subroutine call
+    case 0x2000:
+      stack[sp]= pc;
+      sp++;
+      pc = opcode & 0x0FFF;
+      break;
+    // 0x3XNN, if V[X] equals NN, then skip next instruction 
+    case 0x3000:
+      char X= opcode & 0x0F00;
+      if (V[X] == opcode & 0x00FF) pc+= 2;
+      pc+= 2;
+      break;
+    // 0x4XNN, if V[X] does not equal NN, then skip next instruction
+    case 0x4000:
+      char reg= opcode & 0x0F00;
+      if (V[X] != opcode & 0x00FF) pc+= 2;
+      pc+= 2;
+      break;
+    // 0x5XY0, if V[X] equals V[Y], then skip next instruction
+    case 0x5000:
+      char X= opcode & 0x0F00;
+      char Y= opcode & 0x00F0;
+      if (V[X] == V[Y]) pc+= 2;
+      pc+= 2;
+      break;
+    // 0x6XNN, V[X]= NN
+    case 0x6000:
+      char X= opcode & 0x0F00;
+      V[X]= opcode & 0x00FF;
+      pc+= 2;
+      break;
+    // 0x7XNN, V[X]+= NN (carry flag not affected) 
+    case 0x7000:
+      char X= opcode & 0x0F00;
+      V[X]+= opcode & 0x00FF;
+      break;
+    case 0x8000:
+      break;
+    case 0x9000:
+      break;
     // set index register to be 12 last bit address
     case 0xA000:
       I= opcode & 0x0FFF;
       pc+= 2;
       break;
+    case 0xB000:
+      break;
+    case 0xC000:
+      break;
+    case 0xD000:
+      break;
+    case 0xE000:
+      break;
+    case 0xF000:
+      break;
+
     default:
       cout << "Unknown opcode: " << opcode << endl;
       break;
+
+
+    
+  }
+
+  if (delay_timer > 0) --delay_timer;
+
+  if (sound_timer > 0)
+  {
+    if (sound_timer == 1) cout << "BEEP!" << endl;
+    --sound_timer;
   }
 
 
