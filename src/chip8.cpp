@@ -24,7 +24,7 @@ void Chip8::initialize()
   fill(begin(gfx), end(gfx), 0);
 
   // init the font size from 0x50 to 0x09F
-  for (int i= 0; i < 80; ++i) {
+  for (int i= 0; i < 80; i++) {
     memory[0x50+i]= font[i];
   }
 
@@ -67,35 +67,85 @@ void Chip8::emulateCycle()
       break;
     // 0x3XNN, if V[X] equals NN, then skip next instruction 
     case 0x3000:
-      char X= opcode & 0x0F00;
+      char X= opcode & 0x0F00 >> 8;
       if (V[X] == opcode & 0x00FF) pc+= 2;
       pc+= 2;
       break;
     // 0x4XNN, if V[X] does not equal NN, then skip next instruction
     case 0x4000:
-      char reg= opcode & 0x0F00;
+      char reg= opcode & 0x0F00 >> 8;
       if (V[X] != opcode & 0x00FF) pc+= 2;
       pc+= 2;
       break;
     // 0x5XY0, if V[X] equals V[Y], then skip next instruction
     case 0x5000:
-      char X= opcode & 0x0F00;
+      char X= opcode & 0x0F00 >> 8;
       char Y= opcode & 0x00F0;
       if (V[X] == V[Y]) pc+= 2;
       pc+= 2;
       break;
     // 0x6XNN, V[X]= NN
     case 0x6000:
-      char X= opcode & 0x0F00;
+      char X= opcode & 0x0F00 >> 8;
       V[X]= opcode & 0x00FF;
       pc+= 2;
       break;
     // 0x7XNN, V[X]+= NN (carry flag not affected) 
     case 0x7000:
-      char X= opcode & 0x0F00;
+      char X= opcode & 0x0F00 >> 8;
       V[X]+= opcode & 0x00FF;
       break;
+    // 0x8XY*
     case 0x8000:
+      switch (opcode & 0x000F) {
+        // set V[X] = V[Y]
+        case 0x0000:
+          char X= opcode & 0x0F00 >> 8;
+          char Y= opcode & 0x00F0 >> 4;
+          V[X]= V[Y];
+          break;
+        // set V[X] = V[X] | V[Y]
+        case 0x0001:
+          char X= opcode & 0x0F00 >> 8;
+          char Y= opcode & 0x00F0 >> 4;
+          V[X]|= V[Y];
+          break;
+        // set V[X] = V[X] | V[Y]
+        case 0x0002:
+          char X= opcode & 0x0F00 >> 8;
+          char Y= opcode & 0x00F0 >> 4;
+          V[X]&= V[Y];
+          break;
+        // set V[X] = V[X] ^ V[Y] 
+        case 0x0003:
+          char X= opcode & 0x0F00 >> 8;
+          char Y= opcode & 0x00F0 >> 4;
+          V[X]^= V[Y];
+          break;
+        // set V[X] = V[X] + V[Y]
+        case 0x0004:
+          char X= opcode & 0x0F00 >> 8;
+          char Y= opcode & 0x00F0 >> 4;
+
+          // carry if there is overflow
+          if (V[X] > 0XFF - V[Y]) {
+            V[0XF]= 1;
+          } else {
+            V[0XF]= 0;
+          }
+          V[X]+= V[Y];
+          pc+= 2;
+          break;
+        case 0x0005:
+          break;
+        case 0x0006:
+          break;
+        case 0x0007:
+          break;
+        case 0x000E:
+          break;
+      }
+      pc+= 2;
       break;
     case 0x9000:
       break;
