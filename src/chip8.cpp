@@ -95,68 +95,101 @@ void Chip8::emulateCycle()
       char X= opcode & 0x0F00 >> 8;
       V[X]+= opcode & 0x00FF;
       break;
-    // 0x8XY*
+    // 0x8XY*, X and Y are registers V[X] and V[Y]
     case 0x8000:
       switch (opcode & 0x000F) {
+        char X= opcode & 0x0F00 >> 8;
+        char Y= opcode & 0x00F0 >> 4;
+
         // set V[X] = V[Y]
         case 0x0000:
-          char X= opcode & 0x0F00 >> 8;
-          char Y= opcode & 0x00F0 >> 4;
           V[X]= V[Y];
           break;
         // set V[X] = V[X] | V[Y]
         case 0x0001:
-          char X= opcode & 0x0F00 >> 8;
-          char Y= opcode & 0x00F0 >> 4;
           V[X]|= V[Y];
           break;
         // set V[X] = V[X] | V[Y]
         case 0x0002:
-          char X= opcode & 0x0F00 >> 8;
-          char Y= opcode & 0x00F0 >> 4;
           V[X]&= V[Y];
           break;
         // set V[X] = V[X] ^ V[Y] 
         case 0x0003:
-          char X= opcode & 0x0F00 >> 8;
-          char Y= opcode & 0x00F0 >> 4;
           V[X]^= V[Y];
           break;
         // set V[X] = V[X] + V[Y]
         case 0x0004:
-          char X= opcode & 0x0F00 >> 8;
-          char Y= opcode & 0x00F0 >> 4;
 
           // carry if there is overflow
           if (V[X] > 0XFF - V[Y]) {
-            V[0XF]= 1;
+            V[0xF]= 1;
           } else {
-            V[0XF]= 0;
+            V[0xF]= 0;
           }
           V[X]+= V[Y];
-          pc+= 2;
           break;
+        // set V[X] = V[X] - V[Y]
         case 0x0005:
+          // if borrow, then set last flag to 0
+          if (V[X] < V[Y]) {
+            V[0xF]= 0;
+          } else {
+            V[0xF]= 1;
+          }
+          V[X]-= V[Y];
+
           break;
+        // set V[X]= V[X] >> 1 
         case 0x0006:
+          // store least significant bit into V[15]
+          V[0xF]= V[X] & 0x0F;
+
+          V[X]>>= 1;
           break;
+        // set V[X]= V[Y] - V[X]
         case 0x0007:
+          // if borrow, then set last flag to 0
+          if (V[X] > V[Y]) {
+            V[0xF]= 0;
+          } else {
+            V[0xF]= 1;
+          }
+          V[X]= V[Y] - V[X];
+
           break;
+        // set V[X]= V[X] << 1
         case 0x000E:
+          // store least significant bit into V[15]
+          V[0xF]= V[X] & 0x80;
+
+          V[X]<<= 1;
           break;
       }
       pc+= 2;
       break;
+    // if V[X] != V[Y], skips next instruction
     case 0x9000:
+      char X= opcode & 0x0F00 >> 8;
+      char Y= opcode & 0x00F0 >> 4;
+
+      if (V[X] != V[Y]) pc+= 2;
+
+      pc+= 2;
+
       break;
     // set index register to be 12 last bit address
     case 0xA000:
       I= opcode & 0x0FFF;
       pc+= 2;
       break;
+    // 0xBNNN, jumps to address NNN + V[0]
     case 0xB000:
+      pc= (opcode & 0x0FFF) + V[0]; 
       break;
+    // 0xCXNN, sets V[X] equal to random number and NN
     case 0xC000:
+      V[X]= rand() & (opcode & 0x00FF);
+      pc+= 2;
       break;
     case 0xD000:
       break;
