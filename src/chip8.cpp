@@ -68,21 +68,21 @@ void Chip8::emulateCycle()
     // 0x3XNN, if V[X] equals NN, then skip next instruction 
     case 0x3000:
       char X= opcode & 0x0F00 >> 8;
-      if (V[X] == opcode & 0x00FF) pc+= 2;
-      pc+= 2;
+      if (V[X] == opcode & 0x00FF) pc+= 4;
+      else pc+= 2;
       break;
     // 0x4XNN, if V[X] does not equal NN, then skip next instruction
     case 0x4000:
       char reg= opcode & 0x0F00 >> 8;
-      if (V[X] != opcode & 0x00FF) pc+= 2;
-      pc+= 2;
+      if (V[X] != opcode & 0x00FF) pc+= 4;
+      else pc+= 2;
       break;
     // 0x5XY0, if V[X] equals V[Y], then skip next instruction
     case 0x5000:
       char X= opcode & 0x0F00 >> 8;
       char Y= opcode & 0x00F0;
-      if (V[X] == V[Y]) pc+= 2;
-      pc+= 2;
+      if (V[X] == V[Y]) pc+= 4;
+      else pc+= 2;
       break;
     // 0x6XNN, V[X]= NN
     case 0x6000:
@@ -172,9 +172,8 @@ void Chip8::emulateCycle()
       char X= opcode & 0x0F00 >> 8;
       char Y= opcode & 0x00F0 >> 4;
 
-      if (V[X] != V[Y]) pc+= 2;
-
-      pc+= 2;
+      if (V[X] != V[Y]) pc+= 4;
+      else pc+= 2;
 
       break;
     // set index register to be 12 last bit address
@@ -196,6 +195,39 @@ void Chip8::emulateCycle()
     case 0xE000:
       break;
     case 0xF000:
+      switch (opcode & 0x00FF) {
+        // 0xFX07, sets V[X] equal to delay timer
+        case 0x0007:
+          char X= opcode & 0x0F00 >> 8;
+          V[X]= delay_timer;
+          break;
+        // 0xFX0A, key press is awaited, then stored in V[X] (all operations stop until key is pressed) 
+        case 0x000A:
+          break;
+        // 0xFX15, sets delay timer to V[X]
+        case 0x0015:
+          char X= opcode & 0x0F00 >> 8;
+          delay_timer= V[X];
+          break;
+        // 0xFX15, sets sound timer to V[X]
+        case 0x0018:
+          char X= opcode & 0x0F00 >> 8;
+          sound_timer= V[X];
+          break;
+        // 0xFX1E, sets I= I + V[X]
+        case 0x001E:
+          char X= opcode & 0x0F00 >> 8;
+          I+= V[X];
+          break;
+        case 0x0029:
+          break;
+        case 0x0033:
+          break;
+        case 0x0055:
+          break;
+        case 0x0065:
+          break;
+      }
       break;
 
     default:
