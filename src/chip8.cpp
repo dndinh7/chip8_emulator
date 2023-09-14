@@ -221,11 +221,27 @@ void Chip8::emulateCycle()
           break;
         case 0x0029:
           break;
+        // 0xFX33, store the binary-coded decimal of V[X] into memory at I (hundreds at I, tens at I+1, and ones at I+2)
         case 0x0033:
+          char X= opcode & 0x0F00 >> 8;
+          memory[I]= V[X] / 100;
+          memory[I+1]= V[X] / 10 % 10;
+          memory[I+2]= V[X] % 100 % 10;
+          pc+= 2;
           break;
+        // 0xFX55, stores V[0] to V[X] in memory starting at I
         case 0x0055:
+          char X= opcode & 0x0F00 >> 8;
+          for (char j= 0; j <= X; j++) {
+            memory[I+j]= V[j];
+          }
           break;
+        // 0xFX65, fills V[0] to V[X] with values from memory starting at I
         case 0x0065:
+          char X= opcode & 0x0F00 >> 8;
+          for (char j= 0; j <= X; j++) {
+            V[j]= memory[I+j];
+          }
           break;
       }
       break;
