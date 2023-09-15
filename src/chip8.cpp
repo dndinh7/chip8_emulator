@@ -67,39 +67,39 @@ void Chip8::emulateCycle()
       break;
     // 0x3XNN, if V[X] equals NN, then skip next instruction 
     case 0x3000:
-      char X= opcode & 0x0F00 >> 8;
+      unsigned char X= (opcode & 0x0F00) >> 8;
       if (V[X] == opcode & 0x00FF) pc+= 4;
       else pc+= 2;
       break;
     // 0x4XNN, if V[X] does not equal NN, then skip next instruction
     case 0x4000:
-      char reg= opcode & 0x0F00 >> 8;
+      char reg= (opcode & 0x0F00) >> 8;
       if (V[X] != opcode & 0x00FF) pc+= 4;
       else pc+= 2;
       break;
     // 0x5XY0, if V[X] equals V[Y], then skip next instruction
     case 0x5000:
-      char X= opcode & 0x0F00 >> 8;
-      char Y= opcode & 0x00F0;
+      unsigned char X= (opcode & 0x0F00) >> 8;
+      unsigned char Y= (opcode & 0x00F0);
       if (V[X] == V[Y]) pc+= 4;
       else pc+= 2;
       break;
     // 0x6XNN, V[X]= NN
     case 0x6000:
-      char X= opcode & 0x0F00 >> 8;
+      unsigned char X= (opcode & 0x0F00) >> 8;
       V[X]= opcode & 0x00FF;
       pc+= 2;
       break;
     // 0x7XNN, V[X]+= NN (carry flag not affected) 
     case 0x7000:
-      char X= opcode & 0x0F00 >> 8;
+      unsigned char X= (opcode & 0x0F00) >> 8;
       V[X]+= opcode & 0x00FF;
       break;
     // 0x8XY*, X and Y are registers V[X] and V[Y]
     case 0x8000:
       switch (opcode & 0x000F) {
-        char X= opcode & 0x0F00 >> 8;
-        char Y= opcode & 0x00F0 >> 4;
+        unsigned char X= (opcode & 0x0F00) >> 8;
+        unsigned char Y= (opcode & 0x00F0) >> 4;
 
         // set V[X] = V[Y]
         case 0x0000:
@@ -169,8 +169,8 @@ void Chip8::emulateCycle()
       break;
     // if V[X] != V[Y], skips next instruction
     case 0x9000:
-      char X= opcode & 0x0F00 >> 8;
-      char Y= opcode & 0x00F0 >> 4;
+      unsigned char X= (opcode & 0x0F00) >> 8;
+      unsigned char Y= (opcode & 0x00F0) >> 4;
 
       if (V[X] != V[Y]) pc+= 4;
       else pc+= 2;
@@ -190,7 +190,17 @@ void Chip8::emulateCycle()
       V[X]= rand() & (opcode & 0x00FF);
       pc+= 2;
       break;
+    // 0xDXYN
     case 0xD000:
+      unsigned char X= (opcode & 0x0F00) >> 8;
+      unsigned char Y= (opcode & 0x00F0) >> 4;
+      unsigned char height= (opcode & 0x000F);
+      unsigned char pixel;
+
+      // reset flag
+      V[0xF]= 0;
+
+
       break;
     case 0xE000:
       break;
@@ -198,7 +208,7 @@ void Chip8::emulateCycle()
       switch (opcode & 0x00FF) {
         // 0xFX07, sets V[X] equal to delay timer
         case 0x0007:
-          char X= opcode & 0x0F00 >> 8;
+          unsigned char X= (opcode & 0x0F00) >> 8;
           V[X]= delay_timer;
           break;
         // 0xFX0A, key press is awaited, then stored in V[X] (all operations stop until key is pressed) 
@@ -206,24 +216,24 @@ void Chip8::emulateCycle()
           break;
         // 0xFX15, sets delay timer to V[X]
         case 0x0015:
-          char X= opcode & 0x0F00 >> 8;
+          unsigned char X= (opcode & 0x0F00) >> 8;
           delay_timer= V[X];
           break;
         // 0xFX15, sets sound timer to V[X]
         case 0x0018:
-          char X= opcode & 0x0F00 >> 8;
+          unsigned char X= (opcode & 0x0F00) >> 8;
           sound_timer= V[X];
           break;
         // 0xFX1E, sets I= I + V[X]
         case 0x001E:
-          char X= opcode & 0x0F00 >> 8;
+          unsigned char X= (opcode & 0x0F00) >> 8;
           I+= V[X];
           break;
         case 0x0029:
           break;
         // 0xFX33, store the binary-coded decimal of V[X] into memory at I (hundreds at I, tens at I+1, and ones at I+2)
         case 0x0033:
-          char X= opcode & 0x0F00 >> 8;
+          unsigned char X= (opcode & 0x0F00) >> 8;
           memory[I]= V[X] / 100;
           memory[I+1]= V[X] / 10 % 10;
           memory[I+2]= V[X] % 100 % 10;
@@ -231,14 +241,15 @@ void Chip8::emulateCycle()
           break;
         // 0xFX55, stores V[0] to V[X] in memory starting at I
         case 0x0055:
-          char X= opcode & 0x0F00 >> 8;
+          unsigned char X= (opcode & 0x0F00) >> 8;
           for (char j= 0; j <= X; j++) {
             memory[I+j]= V[j];
           }
+          pc+= 2;
           break;
         // 0xFX65, fills V[0] to V[X] with values from memory starting at I
         case 0x0065:
-          char X= opcode & 0x0F00 >> 8;
+          unsigned char X= (opcode & 0x0F00) >> 8;
           for (char j= 0; j <= X; j++) {
             V[j]= memory[I+j];
           }
