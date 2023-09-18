@@ -50,18 +50,19 @@ void Chip8::emulateCycle()
           pc+= 2;
           break;
         
-        // returns from subroutine
+        // returns from subroutine, next instruction from stack
         case 0x000E:
+          pc= stack[sp];
+          sp--;
           break;
-
       }
     // jump to address 0x0NNN
     case 0x1000:
       pc= opcode & 0x0FFF;
       break;
-    // subroutine call
+    // subroutine call, store the next instruction in stack
     case 0x2000:
-      stack[sp]= pc;
+      stack[sp]= pc+2;
       sp++;
       pc = opcode & 0x0FFF;
       break;
@@ -190,7 +191,7 @@ void Chip8::emulateCycle()
       V[X]= rand() & (opcode & 0x00FF);
       pc+= 2;
       break;
-    // 0xDXYN
+    // 0xDXYN, displays the sprite
     case 0xD000:
       unsigned char X= (opcode & 0x0F00) >> 8;
       unsigned char Y= (opcode & 0x00F0) >> 4;
@@ -201,8 +202,37 @@ void Chip8::emulateCycle()
       V[0xF]= 0;
 
 
+      for (int i= 0; i < height; i++) {
+        pixel= memory[I + i];
+        for (int j= 0; j < 8; j++) {
+          // if pixel is 0, then the display will stay the same
+          if (pixel & (0x80 >> j) == 1) {
+            if (gfx[(V[X] + i) * 64 + V[Y] + j] == 1) {
+              V[0xF]= 1;
+
+            }
+            gfx[(V[X] + i) * 64 + V[Y] + j]^= 1;
+          }
+        }
+      }
+
       break;
     case 0xE000:
+      unsigned char X= (opcode & 0x0F00) >> 8;
+      switch (opcode & 0x000F) {
+        // 0xEX9E, skips next instruction if key at V[X] is pressed 
+        case 0x009E:
+          if (key[V[X]] != 0) pc+= 4;
+          else pc+= 2;
+
+          break;
+        // 0xEXA1, skips next instruction if key at V[X] is not pressed 
+        case 0x00A1:
+          if (key[V[X]] == 0) pc+= 4;
+          else pc+= 2;
+
+          break;
+      }
       break;
     case 0xF000:
       switch (opcode & 0x00FF) {
@@ -261,8 +291,6 @@ void Chip8::emulateCycle()
       cout << "Unknown opcode: " << opcode << endl;
       break;
 
-
-    
   }
 
   if (delay_timer > 0) --delay_timer;
@@ -274,5 +302,4 @@ void Chip8::emulateCycle()
   }
 
 
-  // update timers
 }
