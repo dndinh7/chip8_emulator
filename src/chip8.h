@@ -8,6 +8,7 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
+#include <stdio.h>
 
 using namespace std;
 
@@ -46,8 +47,8 @@ class Chip8 {
   */
 
 
-  // Graphics of 2048 pixels
-  unsigned char gfx[64 * 32];
+  // Graphics of 2048 pixels (32 by 64 pixels)
+  unsigned char gfx[32 * 64];
 
   unsigned char delay_timer; // 60 Hz, timer register that counts down to 0
   unsigned char sound_timer; // 60 Hz, timer register that counts down to 0

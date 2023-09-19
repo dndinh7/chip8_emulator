@@ -201,20 +201,20 @@ void Chip8::emulateCycle()
       // reset flag
       V[0xF]= 0;
 
-
       for (int i= 0; i < height; i++) {
         pixel= memory[I + i];
         for (int j= 0; j < 8; j++) {
           // if pixel is 0, then the display will stay the same
           if (pixel & (0x80 >> j) == 1) {
-            if (gfx[(V[X] + i) * 64 + V[Y] + j] == 1) {
-              V[0xF]= 1;
-
+            // make sure the pixel is on screen by modulating
+            if (gfx[(V[X] + i) % 32 * 64 + (V[Y] + j) % 64] == 1) {
+              V[0xF]= 1; // this essentially notes collision
             }
-            gfx[(V[X] + i) * 64 + V[Y] + j]^= 1;
+            gfx[(V[X] + i) % 32 * 64 + (V[Y] + j) % 64]^= 1;
           }
         }
       }
+      pc+= 2;
 
       break;
     case 0xE000:
@@ -300,6 +300,14 @@ void Chip8::emulateCycle()
     if (sound_timer == 1) cout << "BEEP!" << endl;
     --sound_timer;
   }
+}
 
+void Chip8::loadGame(string game) {
+  FILE* filePtr;
 
+  filePtr= fopen(game.c_str(),"rb");
+  if (filePtr != nullptr) {
+    fread(memory + 0x200, 1, 4096 - 0x200, filePtr);
+    fclose(filePtr);
+  }
 }
